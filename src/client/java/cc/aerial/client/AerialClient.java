@@ -5,37 +5,17 @@ import cc.aerial.client.config.ConfigUtility;
 import cc.aerial.client.event.EventDispatcher;
 import cc.aerial.client.features.impl.combat.*;
 import cc.aerial.client.features.impl.movement.*;
+import cc.aerial.client.features.impl.utility.*;
 import cc.aerial.client.features.impl.visual.*;
-import cc.aerial.client.features.impl.utility.JoinClaimModule;
-import cc.aerial.client.features.impl.utility.PingSpoofModule;
 import cc.aerial.client.features.impl.combat.crystalaura.CrystalAuraModule;
 import cc.aerial.client.features.impl.combat.killaura.KillauraModule;
 import cc.aerial.client.features.impl.hud.DynamicIsland;
 import cc.aerial.client.features.impl.hud.RiseCapsuleModule;
 import cc.aerial.client.features.impl.hud.ScaffoldBlockCounter;
 import cc.aerial.client.features.impl.hud.VanillaMiningIsland;
-import cc.aerial.client.features.impl.utility.ResourcePackSpoofModule;
-import cc.aerial.client.features.impl.utility.ChatBypassModule;
 import cc.aerial.client.features.impl.other.FakePlayerModule;
 import cc.aerial.client.features.impl.other.SpotifyModule;
-import cc.aerial.client.features.impl.utility.OverlayModule;
 import cc.aerial.client.overlay.OverlayRenderer;
-import cc.aerial.client.features.impl.utility.AntiVoidModule;
-import cc.aerial.client.features.impl.utility.AutoArmorModule;
-import cc.aerial.client.features.impl.utility.AutoChestModule;
-import cc.aerial.client.features.impl.utility.AutoHypixelModule;
-import cc.aerial.client.features.impl.utility.AutoToolModule;
-import cc.aerial.client.features.impl.utility.BlinkModule;
-import cc.aerial.client.features.impl.utility.ChestStealerModule;
-import cc.aerial.client.features.impl.utility.InventoryManagerModule;
-import cc.aerial.client.features.impl.utility.DisablerModule;
-import cc.aerial.client.features.impl.utility.MaxOptimizationModule;
-import cc.aerial.client.features.impl.utility.FastBreakModule;
-import cc.aerial.client.features.impl.utility.FastPlaceModule;
-import cc.aerial.client.features.impl.utility.InvMoveModule;
-import cc.aerial.client.features.impl.utility.NoFallModule;
-import cc.aerial.client.features.impl.utility.NoRotateModule;
-import cc.aerial.client.features.impl.utility.BedwarsUtilModule;
 import cc.aerial.client.features.impl.world.XFarmModule;
 import cc.aerial.client.features.impl.world.AntiAfkModule;
 import cc.aerial.client.features.impl.world.AntiDebuffModule;
@@ -115,6 +95,7 @@ public class AerialClient implements ClientModInitializer {
 				DisablerModule.INSTANCE,
 				AutoHypixelModule.INSTANCE,
 				AutoArmorModule.INSTANCE,
+				AutoTotemModule.INSTANCE,
 				InventoryManagerModule.INSTANCE,
 				ChestStealerModule.INSTANCE,
 				AutoChestModule.INSTANCE,
@@ -139,6 +120,9 @@ public class AerialClient implements ClientModInitializer {
 				ViewClipModule.INSTANCE,
 				MurderMysteryModule.INSTANCE,
 				KillEffectModule.INSTANCE,
+				FireflyModule.INSTANCE,
+				PetModule.INSTANCE,
+				JumpCircleModule.INSTANCE,
 				BedPlatesModule.INSTANCE,
 				XFarmModule.INSTANCE,
 				BedwarsUtilModule.INSTANCE,

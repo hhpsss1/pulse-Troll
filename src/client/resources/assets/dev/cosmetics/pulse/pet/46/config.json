@@ -1,0 +1,16 @@
+{
+    "name":  "Demon Pet",
+    "id":  202,
+    "category":  2,
+    "pos":  1,
+    "height":  0.1,
+    "scale":  1,
+    "x":  0,
+    "y":  -0.4,
+    "z":  0,
+    "yaw":  0,
+    "pitch":  0,
+    "roll":  0,
+    "previewY":  0.2,
+    "previewScale":  1
+}

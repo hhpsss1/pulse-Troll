@@ -1,0 +1,21 @@
+{
+    "name":  "pulse_Cake Pet",
+    "id":  9022,
+    "category":  2,
+    "author":  "LuckyVIP",
+    "pos":  1,
+    "version":  1,
+    "config":  [
+
+               ],
+    "height":  0.1,
+    "scale":  0.7,
+    "x":  0.85,
+    "y":  0.25,
+    "z":  0,
+    "yaw":  0,
+    "pitch":  0,
+    "roll":  0,
+    "previewY":  0.2,
+    "previewScale":  1.5
+}

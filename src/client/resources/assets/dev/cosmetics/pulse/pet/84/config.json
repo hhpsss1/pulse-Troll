@@ -1,0 +1,21 @@
+{
+    "name":  "bro9i_Diamond Pet",
+    "id":  9004,
+    "category":  2,
+    "author":  "LuckyVIP",
+    "pos":  1,
+    "version":  1,
+    "config":  [
+
+               ],
+    "height":  0.1,
+    "scale":  0.6,
+    "x":  0.65,
+    "y":  0.35,
+    "z":  0,
+    "yaw":  0,
+    "pitch":  0,
+    "roll":  0,
+    "previewY":  0.2,
+    "previewScale":  1.5
+}

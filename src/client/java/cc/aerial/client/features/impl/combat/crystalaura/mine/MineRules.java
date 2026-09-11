@@ -106,21 +106,21 @@ public final class MineRules {
      *       instead of air, both client-side and on the server, and only an empty fluid legacy-blocks to air.
      *       This is the waterlogging hazard and, at the same time, the water / lava / bubble-column half of the
      *       anticheat's own undiggable list, since those blocks carry their own fluid;</li>
-     *   <li>hardness {@code -1} — the destroy progress is then exactly {@code 0.0F} and the dig never completes:
-     *       bedrock, barrier, light, moving piston. An anticheat treats a finished-digging on one of them as
-     *       invalid.</li>
+     *   <li>bedrock — cannot be broken even with auto mine.</li>
      * </ul>
      *
      * <p>The wrong tool is deliberately NOT a refusal: it is a 3.33x penalty (the 30 versus 100 divisor of the
      * destroy-progress formula), which the MaxTicks setting prices instead. Creative mode is not modelled
-     * either — the aura exists for survival play, where a hardness {@code -1} block is simply out of reach of
-     * the dig loop.
+     * either — the aura exists for survival play.
      */
     public static boolean isDiggable(BlockGetter level, BlockPos pos, BlockState state) {
         if (state.isAir() || !state.getFluidState().isEmpty()) {
             return false;
         }
-        return state.getDestroySpeed(level, pos) >= 0f;
+        if (state.is(Blocks.BEDROCK)) {
+            return false;
+        }
+        return true;
     }
 
     /**

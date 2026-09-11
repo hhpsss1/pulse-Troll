@@ -1,0 +1,21 @@
+{
+    "name":  "akvi4_Pet 2",
+    "id":  9010,
+    "category":  2,
+    "author":  "LuckyVIP",
+    "pos":  1,
+    "version":  1,
+    "config":  [
+
+               ],
+    "height":  0.1,
+    "scale":  1,
+    "x":  0,
+    "y":  -1.2,
+    "z":  0,
+    "yaw":  0,
+    "pitch":  0,
+    "roll":  0,
+    "previewY":  0.2,
+    "previewScale":  1.5
+}

@@ -34,8 +34,10 @@ public final class CommandHandler {
             handleVisibility(parts, false);
         } else if (parts[0].equalsIgnoreCase("unhide")) {
             handleVisibility(parts, true);
+        } else if (parts[0].equalsIgnoreCase("help")) {
+            handleHelp(parts);
         } else {
-            error("Command", "Unknown command: ." + parts[0]);
+            error("Command", "Unknown command: ." + parts[0] + ". Type .help for available commands.");
         }
     }
 
@@ -141,5 +143,67 @@ public final class CommandHandler {
                 .title(title)
                 .description(detail)
                 .buildAndPublish();
+    }
+
+    private static void handleHelp(String[] parts) {
+        if (parts.length > 1) {
+            if (parts[1].equalsIgnoreCase("bind")) {
+                info("Bind Command", ".bind <module> <key/none> - Binds a key to a module");
+                return;
+            } else if (parts[1].equalsIgnoreCase("config")) {
+                info("Config Command", ".config <save/load> [name] - Saves or loads a config");
+                return;
+            } else if (parts[1].equalsIgnoreCase("hide")) {
+                info("Hide Command", ".hide <module> - Hides a module from the arraylist");
+                return;
+            } else if (parts[1].equalsIgnoreCase("unhide")) {
+                info("Unhide Command", ".unhide <module> - Shows a hidden module");
+                return;
+            } else if (parts[1].equalsIgnoreCase("packetrate")) {
+                info("Packetrate Command", ".packetrate - Toggles packet rate debug");
+                return;
+            }
+        }
+
+        StringBuilder helpText = new StringBuilder();
+        helpText.append("Available commands:\n");
+        helpText.append(".bind <module> <key> - Bind key to module\n");
+        helpText.append(".config <save/load> [name] - Save/load config\n");
+        helpText.append(".hide <module> - Hide module\n");
+        helpText.append(".unhide <module> - Show module\n");
+        helpText.append(".packetrate - Toggle debug\n");
+        helpText.append(".help [command] - Get help for specific command\n\n");
+        helpText.append("Available modules:");
+        
+        info("Help", helpText.toString());
+        
+        // Send module list in separate notifications to avoid truncation
+        java.util.List<String> categories = java.util.Arrays.asList(
+            "COMBAT", "MOVEMENT", "VISUAL", "UTILITY", "WORLD", "HUD", "OTHER"
+        );
+        
+        for (String category : categories) {
+            try {
+                cc.aerial.client.features.ModuleCategory moduleCategory = 
+                    cc.aerial.client.features.ModuleCategory.valueOf(category);
+                java.util.List<Module> modules = AerialClient.getModuleRepository()
+                    .getModulesInCategory(moduleCategory);
+                
+                if (!modules.isEmpty()) {
+                    StringBuilder moduleList = new StringBuilder();
+                    moduleList.append(category).append(": ");
+                    for (Module module : modules) {
+                        moduleList.append(module.getName()).append(", ");
+                    }
+                    // Remove trailing comma and space
+                    if (moduleList.length() > 2) {
+                        moduleList.setLength(moduleList.length() - 2);
+                    }
+                    info(category, moduleList.toString());
+                }
+            } catch (IllegalArgumentException e) {
+                // Skip invalid categories
+            }
+        }
     }
 }
