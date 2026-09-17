@@ -22,6 +22,7 @@ import cc.aerial.client.rotation.model.impl.LegitNormalRotationModel;
 import cc.aerial.client.rotation.RotationHelper;
 import cc.aerial.client.rotation.RotationUtility;
 import cc.aerial.client.rotation.model.impl.InstantRotationModel;
+import cc.aerial.client.rotation.ServerRotation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
@@ -64,6 +65,7 @@ public final class KillauraModule extends Module {
         this.tripleCritAttackCount = 0;
         this.tripleCritActive = false;
         this.hvhHasTurned = false;
+        ServerRotation.reset();
     }
 
     @Override

@@ -9,6 +9,7 @@ group = project.maven_group
 repositories {
 
 	maven { url 'https://repo.hypixel.net/repository/Hypixel/' }
+	mavenCentral()
 }
 
 loom {
@@ -40,6 +41,12 @@ dependencies {
 
 	implementation "net.hypixel:mod-api:1.0.2"
 	include "net.hypixel:mod-api:1.0.2"
+
+	// Nashorn JavaScript engine for scripting support (built into Java, no classloader conflicts)
+	implementation "org.openjdk.nashorn:nashorn-core:15.4"
+
+	// LuaJ: lightweight pure-Java Lua interpreter for the advanced script editor (no native libs)
+	implementation "org.luaj:luaj-jse:3.0.1"
 
 	testImplementation platform("org.junit:junit-bom:5.11.4")
 	testImplementation "org.junit.jupiter:junit-jupiter"

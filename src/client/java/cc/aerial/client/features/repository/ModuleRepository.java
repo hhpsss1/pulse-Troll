@@ -46,16 +46,26 @@ public final class ModuleRepository {
         return module;
     }
 
+    private int revision;
+
+    /** Bumped whenever the dynamic module set changes, so GUIs can invalidate cached module lists. */
+    public int getRevision() {
+        return revision;
+    }
+
     public void registerDynamic(final Module module) {
         dynamicModules.put(module.getId(), module);
+        revision++;
     }
 
     public void unregisterDynamic(final Module module) {
         dynamicModules.remove(module.getId(), module);
+        revision++;
     }
 
     public void clearDynamic() {
         dynamicModules.clear();
+        revision++;
     }
 
     public Collection<Module> getModules() {

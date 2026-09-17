@@ -50,4 +50,10 @@ public final class ServerRotation {
         LocalPlayer player = Minecraft.getInstance().player;
         return player == null ? -1 : player.tickCount;
     }
+
+    /** Clears the submitted rotation state. Call when a module that submits rotations is disabled. */
+    public static void reset() {
+        submittedTick = -1;
+        priority = Integer.MIN_VALUE;
+    }
 }

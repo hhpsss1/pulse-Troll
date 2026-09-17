@@ -51,6 +51,35 @@ public final class ConfigUtility {
         return cleaned.isEmpty() ? DEFAULT_NAME : cleaned;
     }
 
+    private static final String EXTENSION = ".aerial";
+
+    public static File configsDirectory() {
+        return new File(Minecraft.getInstance().gameDirectory, "aerial");
+    }
+
+    /** Names (without extension) of all saved {@code .aerial} configs, case-insensitively sorted, excluding {@code .bak} backups. */
+    public static List<String> listConfigs() {
+        List<String> names = new ArrayList<>();
+        File[] files = configsDirectory().listFiles((dir, n) -> n.endsWith(EXTENSION));
+        if (files != null) {
+            for (File f : files) {
+                String n = f.getName();
+                names.add(n.substring(0, n.length() - EXTENSION.length()));
+            }
+        }
+        names.sort(String.CASE_INSENSITIVE_ORDER);
+        return names;
+    }
+
+    public static boolean exists(String name) {
+        return file(name).exists();
+    }
+
+    public static boolean delete(String name) {
+        File file = file(name);
+        return file.exists() && file.delete();
+    }
+
     public static void save() {
         save(DEFAULT_NAME);
     }

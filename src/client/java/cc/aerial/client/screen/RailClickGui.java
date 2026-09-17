@@ -13,6 +13,8 @@ import cc.aerial.client.render.font.AerialFont;
 import cc.aerial.client.screen.animation.Animation;
 import cc.aerial.client.screen.animation.Easing;
 import cc.aerial.client.screen.animation.Scroller;
+import cc.aerial.client.screen.tabs.TabBar;
+import cc.aerial.client.screen.tabs.TabHost;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -170,9 +172,19 @@ public final class RailClickGui extends Screen {
         float detailX = listX + LIST_WIDTH + GAP;
         float detailW = PANEL_WIDTH - PADDING * 2.0f - RAIL_WIDTH - LIST_WIDTH - GAP * 2.0f;
 
-        drawRail(extractor, railX, cardY, cardH, mouseX, mouseY, progress);
-        drawList(extractor, listX, cardY, cardH, mouseX, mouseY, progress);
-        drawDetail(extractor, detailX, cardY, cardH, detailW, mouseX, mouseY, progress);
+        // Tab bar sits just above the floating panel and moves with it.
+        float barTopY = y - TabHost.barHeight() - 6.0f;
+        TabHost.renderBar(extractor, x + PANEL_WIDTH * 0.5f, barTopY, progress, mouseX, mouseY, null);
+
+        if (TabBar.isFeatures()) {
+            drawRail(extractor, railX, cardY, cardH, mouseX, mouseY, progress);
+            drawList(extractor, listX, cardY, cardH, mouseX, mouseY, progress);
+            drawDetail(extractor, detailX, cardY, cardH, detailW, mouseX, mouseY, progress);
+        } else {
+            float contentX = x + PADDING;
+            float contentW = PANEL_WIDTH - PADDING * 2.0f;
+            TabHost.renderContent(extractor, contentX, cardY, contentW, cardH, progress, mouseX, mouseY, null);
+        }
 
         super.extractRenderState(extractor, mouseX, mouseY, partialTick);
     }
@@ -453,6 +465,24 @@ public final class RailClickGui extends Screen {
         float detailX = listX + LIST_WIDTH + GAP;
         float detailW = PANEL_WIDTH - PADDING * 2.0f - RAIL_WIDTH - LIST_WIDTH - GAP * 2.0f;
 
+        if (TabHost.barClicked(mx, my, button)) {
+            return true;
+        }
+        if (!TabBar.isFeatures()) {
+            float contentX = x + PADDING;
+            float contentW = PANEL_WIDTH - PADDING * 2.0f;
+            if (TabHost.contentClicked(mx, my, button, contentX, cardY, contentW, cardH)) {
+                return true;
+            }
+            if (contains(mx, my, x, y, PANEL_WIDTH, PANEL_HEIGHT)) {
+                dragging = true;
+                dragOffsetX = (float) mx - sPanelX;
+                dragOffsetY = (float) my - sPanelY;
+                return true;
+            }
+            return super.mouseClicked(event, doubled);
+        }
+
         if (!contains(mx, my, x, y, PANEL_WIDTH, PANEL_HEIGHT)) {
             return super.mouseClicked(event, doubled);
         }
@@ -553,6 +583,7 @@ public final class RailClickGui extends Screen {
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
         dragging = false;
+        TabHost.contentReleased(event.button());
         if (sSelected != null) {
             RowContent content = contentFor(sSelected);
             if (content != null) {
@@ -577,6 +608,16 @@ public final class RailClickGui extends Screen {
         if (Float.isNaN(sPanelX)) {
             return super.mouseScrolled(mouseX, mouseY, horizontal, vertical);
         }
+        if (!TabBar.isFeatures()) {
+            float contentX = sPanelX + PADDING;
+            float contentW = PANEL_WIDTH - PADDING * 2.0f;
+            float cardY = sPanelY + PADDING;
+            float cardH = PANEL_HEIGHT - PADDING * 2.0f;
+            if (TabHost.contentScrolled(mouseX, mouseY, vertical, contentX, cardY, contentW, cardH)) {
+                return true;
+            }
+            return super.mouseScrolled(mouseX, mouseY, horizontal, vertical);
+        }
         float listX = sPanelX + PADDING + RAIL_WIDTH + GAP;
         float detailX = listX + LIST_WIDTH + GAP;
         float cardY = sPanelY + PADDING;
@@ -599,6 +640,16 @@ public final class RailClickGui extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
+        if (!TabBar.isFeatures()) {
+            if (TabHost.contentKeyPressed(keyEvent)) {
+                return true;
+            }
+            if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE) {
+                requestClose();
+                return true;
+            }
+            return super.keyPressed(keyEvent);
+        }
         if (sView == View.SEARCH && sSearchFocused) {
             if (keyEvent.key() == GLFW.GLFW_KEY_BACKSPACE) {
                 if (!sQuery.isEmpty()) {
@@ -623,6 +674,12 @@ public final class RailClickGui extends Screen {
 
     @Override
     public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        if (!TabBar.isFeatures()) {
+            if (TabHost.contentCharTyped((char) event.codepoint())) {
+                return true;
+            }
+            return super.charTyped(event);
+        }
         if (sView == View.SEARCH && sSearchFocused && event.isAllowedChatCharacter()) {
             sQuery += (char) event.codepoint();
             LIST_SCROLL.getAnimation().setValue(0.0f);
@@ -747,8 +804,14 @@ public final class RailClickGui extends Screen {
 
     private static final class ModuleRepositoryView {
         private final Map<ModuleCategory, List<Module>> cache = new IdentityHashMap<>();
+        private int cachedRevision = -1;
 
         List<Module> inCategory(ModuleCategory category) {
+            int revision = AerialClient.getModuleRepository().getRevision();
+            if (revision != cachedRevision) {
+                cache.clear();
+                cachedRevision = revision;
+            }
             return cache.computeIfAbsent(category, key -> {
                 List<Module> list = new ArrayList<>(
                         AerialClient.getModuleRepository().getModulesInCategory(key));

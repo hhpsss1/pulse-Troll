@@ -21,8 +21,14 @@ public final class ClickGuiState {
             rail.requestClose();
         } else if (mc.gui.screen() instanceof AerialClickGui gui) {
             gui.requestClose();
+        } else if (mc.gui.screen() instanceof DeadlockClickGui deadlock) {
+            deadlock.requestClose();
         } else if (mc.gui.screen() == null) {
-            mc.setScreenAndShow(isRailGui() ? new RailClickGui() : new AerialClickGui());
+            mc.setScreenAndShow(switch (ClickGuiModule.INSTANCE.getLayout()) {
+                case CLASSIC -> new AerialClickGui();
+                case DEADLOCK -> new DeadlockClickGui();
+                default -> new RailClickGui();
+            });
         }
     }
 }

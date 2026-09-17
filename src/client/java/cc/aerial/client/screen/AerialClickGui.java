@@ -21,6 +21,8 @@ import cc.aerial.client.render.font.AerialFont;
 import cc.aerial.client.screen.animation.Animation;
 import cc.aerial.client.screen.animation.Easing;
 import cc.aerial.client.screen.animation.Scroller;
+import cc.aerial.client.screen.tabs.TabBar;
+import cc.aerial.client.screen.tabs.TabHost;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -58,7 +60,9 @@ public final class AerialClickGui extends Screen {
     private static final float ROW_HEIGHT = 20.0f;
 
     private static final float PROPERTY_HEIGHT = 17.0f;
-    private static final float PANEL_TOP = 25.0f;
+    private static final float PANEL_TOP = 40.0f;
+    private static final float TAB_TOP = 8.0f;
+    private static final float TAB_CONTENT_WIDTH = 710.0f;
     private static final float RADIUS = 5.0f;
     private static final float HEADER_TEXT_SIZE = 9.0f;
     private static final float ROW_TEXT_SIZE = 8.0f;
@@ -87,22 +91,22 @@ public final class AerialClickGui extends Screen {
     private static AerialFont outlinedIconFont;
     private static AerialFont regularIconFont;
 
-    static AerialFont boldFont() {
+    public static AerialFont boldFont() {
         ensureFontsLoaded();
         return boldFont;
     }
 
-    static AerialFont mediumFont() {
+    public static AerialFont mediumFont() {
         ensureFontsLoaded();
         return mediumFont;
     }
 
-    static AerialFont regularIconFont() {
+    public static AerialFont regularIconFont() {
         ensureFontsLoaded();
         return regularIconFont;
     }
 
-    static AerialFont outlinedIconFont() {
+    public static AerialFont outlinedIconFont() {
         ensureFontsLoaded();
         return outlinedIconFont;
     }
@@ -115,7 +119,8 @@ public final class AerialClickGui extends Screen {
     private final CategoryPanelState visualPanel = buildPanel(ModuleCategory.VISUAL, ICON_VISUAL, 2);
     private final CategoryPanelState worldPanel = buildPanel(ModuleCategory.WORLD, ICON_WORLD, 3);
     private final CategoryPanelState utilityPanel = buildPanel(ModuleCategory.UTILITY, ICON_UTILITY, 4);
-    private final List<CategoryPanelState> panels = List.of(combatPanel, movementPanel, visualPanel, worldPanel, utilityPanel);
+    private final CategoryPanelState scriptsPanel = buildPanel(ModuleCategory.SCRIPTS, ModuleCategory.SCRIPTS.getIcon(), 5);
+    private final List<CategoryPanelState> panels = List.of(combatPanel, movementPanel, visualPanel, worldPanel, utilityPanel, scriptsPanel);
 
     private boolean closing;
 
@@ -148,6 +153,10 @@ public final class AerialClickGui extends Screen {
     }
 
     private CategoryPanelState buildPanel(ModuleCategory category, char icon, int index, Row... extraRows) {
+        return new CategoryPanelState(category, category.getName(), icon, buildRows(category, extraRows), index);
+    }
+
+    private List<Row> buildRows(ModuleCategory category, Row... extraRows) {
         List<Row> rows = new ArrayList<>();
         for (Module module : moduleRepository.getModulesInCategory(category)) {
             rows.add(moduleRow(module));
@@ -156,7 +165,21 @@ public final class AerialClickGui extends Screen {
             rows.add(extra);
         }
         rows.sort(Comparator.comparing(row -> row.name));
-        return new CategoryPanelState(category.getName(), icon, List.copyOf(rows), index);
+        return List.copyOf(rows);
+    }
+
+    private int panelsRevision = AerialClient.getModuleRepository().getRevision();
+
+    /** Rebuild category rows when scripts add/remove modules while the GUI is open. */
+    private void refreshModulesIfNeeded() {
+        int revision = moduleRepository.getRevision();
+        if (revision == panelsRevision) {
+            return;
+        }
+        panelsRevision = revision;
+        for (CategoryPanelState panel : panels) {
+            panel.rows = buildRows(panel.category);
+        }
     }
 
     private Row moduleRow(Module module) {
@@ -180,6 +203,21 @@ public final class AerialClickGui extends Screen {
             outlinedIconFont = AerialFont.createIconFromResource("OpalMaterialIconsOutlined.ttf",
                     ICON_COMBAT, ICON_MOVEMENT, ICON_VISUAL, ICON_WORLD, ICON_UTILITY,
                     ModuleCategory.SCRIPTS.getIcon(),
+                    cc.aerial.client.screen.tabs.TabIcons.FEATURES,
+                    cc.aerial.client.screen.tabs.TabIcons.SCRIPTS,
+                    cc.aerial.client.screen.tabs.TabIcons.CONFIGS,
+                    cc.aerial.client.screen.tabs.TabIcons.HUD,
+                    cc.aerial.client.screen.tabs.TabIcons.ADD,
+                    cc.aerial.client.screen.tabs.TabIcons.PLAY,
+                    cc.aerial.client.screen.tabs.TabIcons.SAVE,
+                    cc.aerial.client.screen.tabs.TabIcons.TRASH,
+                    cc.aerial.client.screen.tabs.TabIcons.DOC,
+                    cc.aerial.client.screen.tabs.TabIcons.REFRESH,
+                    cc.aerial.client.screen.tabs.TabIcons.NEW,
+                    cc.aerial.client.screen.tabs.TabIcons.CHEVRON,
+                    cc.aerial.client.screen.tabs.TabIcons.COPY,
+                    cc.aerial.client.screen.tabs.TabIcons.UP,
+                    cc.aerial.client.screen.tabs.TabIcons.DOWN,
                     RailClickGui.CLOSE_ICON, RailClickGui.SEARCH_ICON,
                     RailClickGui.STAR_ICON, RailClickGui.STAR_OUTLINE_ICON);
             regularIconFont = AerialFont.createIconFromResource("OpalMaterialIconsRegular.ttf", EXPAND_ICON);
@@ -235,9 +273,26 @@ public final class AerialClickGui extends Screen {
     @Override
     public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
         ensureFontsLoaded();
-        for (CategoryPanelState panel : panels) {
-            renderPanel(extractor, panel, mouseX, mouseY);
+        refreshModulesIfNeeded();
+        if (TabBar.isFeatures()) {
+            for (CategoryPanelState panel : panels) {
+                renderPanel(extractor, panel, mouseX, mouseY);
+            }
+        } else {
+            // Keep the open/close animation running so ESC still closes the screen (see tick()).
+            for (CategoryPanelState panel : panels) {
+                panel.openAnimation.run(closing ? 0.0f : 1.0f);
+            }
+            float alpha = panels.get(0).openAnimation.getValue();
+            float startX = (width - TAB_CONTENT_WIDTH) * 0.5f;
+            float contentY = PANEL_TOP;
+            float contentH = height - PANEL_TOP - 10.0f;
+            TabHost.renderContent(extractor, startX, contentY, TAB_CONTENT_WIDTH, contentH,
+                    alpha, mouseX, mouseY, null);
         }
+
+        float barAlpha = panels.get(0).openAnimation.getValue();
+        TabHost.renderBar(extractor, width * 0.5f, TAB_TOP, barAlpha, mouseX, mouseY, null);
         super.extractRenderState(extractor, mouseX, mouseY, partialTick);
     }
 
@@ -473,16 +528,16 @@ public final class AerialClickGui extends Screen {
         RenderUtil.roundedRectAsym(extractor, x, y, width, height, radius, false, color, scissor);
     }
 
-    static int withAlpha(int argb, float alpha) {
+    public static int withAlpha(int argb, float alpha) {
         int a = Math.round(((argb >>> 24) & 0xFF) * Math.max(0.0f, Math.min(1.0f, alpha)));
         return (a << 24) | (argb & 0x00FFFFFF);
     }
 
-    static int themeColor() {
+    public static int themeColor() {
         return InterfaceModule.INSTANCE.getTheme().getFirstColor().getRGB();
     }
 
-    static int themeColorSecondary() {
+    public static int themeColorSecondary() {
         return InterfaceModule.INSTANCE.getTheme().getSecondColor().getRGB();
     }
 
@@ -498,6 +553,7 @@ public final class AerialClickGui extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+        refreshModulesIfNeeded();
         if (selectingBindRow != null) {
             BindingService bindingService = BindRepository.INSTANCE.getBindingService();
             bindingService.clearBindings(selectingBindRow.module);
@@ -508,6 +564,18 @@ public final class AerialClickGui extends Screen {
 
         focusedTextProperty = null;
         listeningKeyProperty = null;
+
+        if (TabHost.barClicked(event.x(), event.y(), event.button())) {
+            return true;
+        }
+        if (!TabBar.isFeatures()) {
+            float startX = (width - TAB_CONTENT_WIDTH) * 0.5f;
+            if (TabHost.contentClicked(event.x(), event.y(), event.button(),
+                    startX, PANEL_TOP, TAB_CONTENT_WIDTH, height - PANEL_TOP - 10.0f)) {
+                return true;
+            }
+            return super.mouseClicked(event, doubled);
+        }
 
         for (CategoryPanelState panel : panels) {
             if (panelMouseClicked(panel, event)) {
@@ -558,6 +626,7 @@ public final class AerialClickGui extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        TabHost.contentReleased(event.button());
         if (event.button() == 0) {
             for (CategoryPanelState panel : panels) {
                 for (Row row : panel.rows) {
@@ -572,6 +641,14 @@ public final class AerialClickGui extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (!TabBar.isFeatures()) {
+            float startX = (width - TAB_CONTENT_WIDTH) * 0.5f;
+            if (TabHost.contentScrolled(mouseX, mouseY, verticalAmount,
+                    startX, PANEL_TOP, TAB_CONTENT_WIDTH, height - PANEL_TOP - 10.0f)) {
+                return true;
+            }
+            return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        }
         for (CategoryPanelState panel : panels) {
             float x = panelX(panel);
             float contentTop = PANEL_TOP + ROW_HEIGHT;
@@ -586,6 +663,12 @@ public final class AerialClickGui extends Screen {
 
     @Override
     public boolean charTyped(CharacterEvent event) {
+        if (!TabBar.isFeatures()) {
+            if (TabHost.contentCharTyped((char) event.codepoint())) {
+                return true;
+            }
+            return super.charTyped(event);
+        }
         if (focusedTextProperty != null && event.isAllowedChatCharacter()) {
             focusedTextProperty.insertChar((char) event.codepoint());
             return true;
@@ -595,6 +678,16 @@ public final class AerialClickGui extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent keyEvent) {
+        if (!TabBar.isFeatures()) {
+            if (TabHost.contentKeyPressed(keyEvent)) {
+                return true;
+            }
+            if (keyEvent.key() == GLFW.GLFW_KEY_ESCAPE && shouldCloseOnEsc()) {
+                requestClose();
+                return true;
+            }
+            return super.keyPressed(keyEvent);
+        }
         if (focusedTextProperty != null) {
             if (keyEvent.isPaste()) {
                 focusedTextProperty.insert(Minecraft.getInstance().keyboardHandler.getClipboard());
@@ -669,14 +762,16 @@ public final class AerialClickGui extends Screen {
     }
 
     private static final class CategoryPanelState {
+        final ModuleCategory category;
         final String headerText;
         final char headerIcon;
-        final List<Row> rows;
+        List<Row> rows;
         final int index;
         final Animation openAnimation;
         final Scroller scroller = new Scroller();
 
-        CategoryPanelState(String headerText, char headerIcon, List<Row> rows, int index) {
+        CategoryPanelState(ModuleCategory category, String headerText, char headerIcon, List<Row> rows, int index) {
+            this.category = category;
             this.headerText = headerText;
             this.headerIcon = headerIcon;
             this.rows = rows;

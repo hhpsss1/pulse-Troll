@@ -27,6 +27,7 @@ import cc.aerial.client.features.repository.ModuleRepository;
 import cc.aerial.client.hypixel.AerialHypixelTransport;
 import cc.aerial.client.packet.LagManager;
 import cc.aerial.client.packet.delay.DelayManager;
+import cc.aerial.client.script.ScriptSystem;
 import cc.aerial.client.utility.GroundTickTracker;
 import cc.aerial.client.utility.TeleportTickTracker;
 import cc.aerial.client.screen.ClickGuiKeybind;
@@ -121,7 +122,6 @@ public class AerialClient implements ClientModInitializer {
 				MurderMysteryModule.INSTANCE,
 				KillEffectModule.INSTANCE,
 				FireflyModule.INSTANCE,
-				PetModule.INSTANCE,
 				JumpCircleModule.INSTANCE,
 				BedPlatesModule.INSTANCE,
 				XFarmModule.INSTANCE,
@@ -143,6 +143,10 @@ public class AerialClient implements ClientModInitializer {
 				TargetStrafeModule.INSTANCE,
 				KillMessageModule.INSTANCE
 		);
+
+		// Initialize scripting system after the module repository is ready
+		// so script-created modules can register themselves as dynamic modules.
+		ScriptSystem.getInstance().initialize();
 
 		AerialHypixelTransport.INSTANCE.register();
 

@@ -33,9 +33,14 @@ public final class ClickGuiModule extends Module {
         return layout.getValue() == Layout.RAIL;
     }
 
+    public Layout getLayout() {
+        return layout.getValue();
+    }
+
     public enum Layout {
         RAIL("Rail"),
-        CLASSIC("Classic");
+        CLASSIC("Classic"),
+        DEADLOCK("Deadlock");
 
         private final String label;
 
